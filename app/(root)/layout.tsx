@@ -7,7 +7,10 @@ import clsx from "clsx"
 import { dark } from "@clerk/themes";
 import { ClerkProvider } from "@clerk/nextjs";
 
+import TopBar from "@/components/shared/TopBar";
+
 import '../globals.css'
+import classes from './layout.module.css';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,7 +29,16 @@ function RootLayout({
       baseTheme: dark,
     }}>
       <html lang="en">
-        <body className={clsx(inter.className, 'bg-dark-1')}>{children}</body>
+        <body className={clsx(inter.className, 'bg-dark-1')}>
+          <TopBar />
+          <main>
+            <section className="main-container">
+              <div className={classes.wrapper}>
+                {children}
+              </div>
+            </section>
+          </main>
+        </body>
       </html>
     </ClerkProvider>
   )
