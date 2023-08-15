@@ -2,6 +2,8 @@ import { currentUser } from "@clerk/nextjs";
 
 import AccountProfile from "@/components/forms/AccountProfile/AccountProfile";
 
+// import classes from './onboarding.module.css';
+
 async function OnboardingPage() {
     const user = await currentUser();
 
