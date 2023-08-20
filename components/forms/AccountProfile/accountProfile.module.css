@@ -1,0 +1,15 @@
+@tailwind components;
+
+@layer components {
+    .form {
+        @apply flex flex-col gap-10 justify-start;
+
+        .formImgField {
+            @apply flex items-center gap-4;
+        }
+
+        .formInputField {
+            @apply flex flex-col gap-3 w-full;
+        }
+    }
+}

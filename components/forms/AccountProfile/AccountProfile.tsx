@@ -2,6 +2,7 @@
 import { ChangeEvent, useState } from 'react'
 
 import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
 
 import clsx from 'clsx'
 import { useForm } from 'react-hook-form'
@@ -19,8 +20,10 @@ import {
 } from '@/components/ui/form'
 import { UserValidation, type UserValidationType } from '@/lib/validations/user'
 import { isBase64Image } from '@/lib/utils'
+import { useUploadThing } from '@/lib/uploadthing'
 
-// import styles from './accountProfile.module.css';
+import styles from './accountProfile.module.css';
+import { updateUser } from '@/lib/actions/user.actions'
 
 interface AccountProfileProps {
   user: {
@@ -35,8 +38,11 @@ interface AccountProfileProps {
 }
 
 const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const [files, setFiles] = useState<File[] | null>(null)
+  const [files, setFiles] = useState<File[] | null>(null);
+  const { startUpload } = useUploadThing("media");
 
   const form = useForm({
     resolver: zodResolver(UserValidation),
@@ -74,29 +80,48 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
 
   }
 
-  function onSubmit(values: UserValidationType) {
+  async function onSubmit(values: UserValidationType) {
     const blob = values.profile_photo;
 
     const hasImageChanged = isBase64Image(blob);
 
-    // if (hasImageChanged) {
-    //   const imgRes =
-    // }
+    if (hasImageChanged && files) {
+      const imgRes = await startUpload(files);
+      if(imgRes && imgRes[0]?.url) {
+        values.profile_photo = imgRes[0].url;
+      }
+    }
 
-    console.log(values)
+    try {
+      await updateUser({
+        userId: String(user.id),
+        username: values?.username,
+        name: values?.name,
+        bio: values?.bio,
+        image: user?.image ?? '',
+        path: pathname
+      })
+
+      if (pathname === '/profile/edit') {
+        router.back()
+      } else {
+        router.push('/')
+      }
+    } catch {}
+
   }
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-10 justify-start"
+        className={styles.form}
       >
         <FormField
           control={form.control}
           name="profile_photo"
           render={({ field }) => (
-            <FormItem className='flex items-center gap-4'>
+            <FormItem className={styles.formImgField}>
               <FormLabel className='account-form_image-label'>
                 {field.value ? (
                   <Image
@@ -133,7 +158,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
+            <FormItem className={styles.formInputField}>
               <FormLabel className="text-base-semibold text-gray-200">
                 Name
               </FormLabel>
@@ -152,7 +177,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
           control={form.control}
           name="username"
           render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
+            <FormItem className={styles.formInputField}>
               <FormLabel className="text-base-semibold text-gray-200">
                 User Name
               </FormLabel>
@@ -171,7 +196,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
           control={form.control}
           name="bio"
           render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
+            <FormItem className={styles.formInputField}>
               <FormLabel className="text-base-semibold text-gray-200">
                 Bio
               </FormLabel>
